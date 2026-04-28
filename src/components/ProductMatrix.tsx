@@ -273,7 +273,8 @@ export const ProductMatrix: React.FC<Props> = ({ products, activeShipments, scor
                 const s = getShipmentForCategory(selectedProduct.category);
                 if (!s) return <div style={{ fontSize: '13px', color: '#666', fontStyle: 'italic' }}>No active shipment — budget analysis unavailable</div>;
                 
-                const costOfDelay = s.delayHours * s.costPerHourDelay;
+                const volumeMultiplier = selectedProduct.unitsSold / 2100; // Normalize based on baseline
+                const costOfDelay = s.delayHours * s.costPerHourDelay * volumeMultiplier;
                 const expeditePremium = s.expediteRouteCost - s.baseRouteCost;
                 const netSaving = costOfDelay - expeditePremium;
                 const isPositive = netSaving > 0;
@@ -315,24 +316,23 @@ export const ProductMatrix: React.FC<Props> = ({ products, activeShipments, scor
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   onClick={() => {
-                    const targetRegion = "Southeast Asia";
-                    const url = `https://www.google.com/search?q=reliable+suppliers+of+${encodeURIComponent(selectedProduct.name)}+in+${encodeURIComponent(targetRegion)}+with+low+tariffs`;
+                    const url = `https://www.google.com/search?q=reliable+wholesale+suppliers+of+${encodeURIComponent(selectedProduct.name)}+outside+high+risk+zones`;
                     window.open(url, '_blank');
                   }}
                   style={{ flex: 1, background: '#0f1117', border: '1px solid #378add', color: '#378add', padding: '10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  🔍 Search Market
+                  🔍 Source Alternatives via Google
                 </button>
                 <button
                   onClick={() => {
                     const s = getShipmentForCategory(selectedProduct.category);
                     const city = s ? s.destination.split(',')[0] : "Delhi";
-                    const url = `https://www.google.com/maps/search/logistics+and+warehousing+near+${encodeURIComponent(city)}`;
+                    const url = `https://www.google.com/maps/search/logistics+and+distribution+centers+near+${encodeURIComponent(city)}`;
                     window.open(url, '_blank');
                   }}
                   style={{ flex: 1, background: '#0f1117', border: '1px solid #ffa502', color: '#ffa502', padding: '10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  📍 Find Nearby
+                  📍 Find Nearby Distributors
                 </button>
               </div>
             </div>

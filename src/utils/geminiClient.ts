@@ -257,7 +257,7 @@ export const productSpecificStrategy = async (
   - If current supplier is reliable and low risk, recommend keeping them
   - If risk score > 55, strongly recommend reroute
   - If supplier has unstable politics or BB rating, recommend switching with specific alternative
-  - Explicitly mention that the manager can use the "🔍 Search Market" and "📍 Find Nearby" buttons integrated in the drawer to find real-time alternatives or nearby distributors (e.g., "Recommend searching for local Indian suppliers via Google Maps to reduce current 18% China tariff").
+  - Explicitly mention that the manager can use the "🔍 Source Alternatives via Google" and "📍 Find Nearby Distributors" bridges integrated in the drawer to find pre-vetted alternative vendors in safer geopolitical zones (e.g., "Recommend searching for local Indian suppliers via Google Maps to reduce current 18% China tariff").
   - Return ONLY valid JSON, no markdown, no backticks
   `;
 

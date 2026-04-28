@@ -10,6 +10,7 @@ import { fetchAllWeatherForShipment, ShipmentWeather } from './utils/weatherFore
 import { calculateRisk, getStatusFromScore, SignalScores } from './utils/riskEngine';
 import { runDecisionPipeline, DecisionResult } from './utils/decisionEngine';
 import DataIntegration from './components/DataIntegration.tsx';
+import { Toaster } from 'react-hot-toast';
 
 type ActiveView = 'map' | 'supplier' | 'product' | 'decision' | 'integration' | null;
 
@@ -297,7 +298,7 @@ export const App: React.FC = () => {
       content = <DecisionEngineExpanded alerts={alerts} shipments={shipments} addAlert={addAlert} onSlottingExecuted={setIsSlottingExecuted} />;
     } else if (activeView === 'integration') {
       title = "Data Integration Center";
-      content = <DataIntegration products={products} setProducts={setProducts} shipments={shipments} weatherData={weatherData} evaluateShipments={evaluateShipments} addAlert={addAlert} />;
+      content = <DataIntegration setProducts={setProducts} addAlert={addAlert} />;
     }
 
     return (
@@ -354,6 +355,7 @@ export const App: React.FC = () => {
         data={emailComposerData}
         initialType={emailComposerType}
       />
+      <Toaster position="top-right" />
     </div>
   );
 };

@@ -1,15 +1,13 @@
-# ChainIQ: The Ripple Solution
+## Updated Process Flow for the Prototype PPT
 
-## Presentation Logic Update
+**Step 1: Risk Detection**
+GDELT flags a port strike affecting your current supplier.
 
-| Feature | Why it Wins |
-| :--- | :--- |
-| **Real-time Bill Recording** | Proves the system isn't just "predicting" but is actively learning from every transaction. |
-| **Google Search Bridge** | Closes the loop. You don't just tell them a supplier is bad; you give them a 1-click door to find a new one. |
-| **Dynamic Data Input** | Shows the judge that the platform is ready for any e-commerce business to "Plug and Play" their own data. |
+**Step 2: AI Analysis**
+Gemini 2.0 Flash explains the risk and suggests diversifying the source.
 
-## Implementation Details
-- **Data Integration Center**: Allows for manual product entry and simulated digital bill capture.
-- **State Sync**: Adding a product immediately updates the quadrant matrix, demonstrating real-time reactivity.
-- **Live Market Connectivity**: "Search Market" and "Find Nearby" buttons bridge the gap between AI analysis and real-world execution via Google Search and Maps.
-- **AI Context**: Gemini is trained to suggest using these live bridges when risk is detected, making the AI feel more grounded and actionable.
+**Step 3: Action Bridge**
+User clicks "Source Alternatives."
+
+**Step 4: External Discovery**
+ChainIQ launches a targeted Google Search to find pre-vetted vendors, closing the decision loop.

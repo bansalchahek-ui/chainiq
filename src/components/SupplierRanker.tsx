@@ -191,18 +191,17 @@ export const SupplierRanker: React.FC<Props> = ({ aiRecommendedSupplier, setAiRe
                   <button
                     onClick={() => {
                       const productName = supplierData.products?.[0] || "general supplies";
-                      const targetRegion = supplierData.country === 'China' ? "Vietnam" : "India";
-                      const url = `https://www.google.com/search?q=reliable+suppliers+of+${encodeURIComponent(productName)}+in+${encodeURIComponent(targetRegion)}+with+low+tariffs`;
+                      const url = `https://www.google.com/search?q=reliable+wholesale+suppliers+of+${encodeURIComponent(productName)}+outside+high+risk+zones`;
                       window.open(url, '_blank');
                     }}
                     style={{ background: 'rgba(55, 138, 221, 0.1)', border: '1px solid #378add', color: '#378add', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
-                    🔍 Search Market for Alternatives
+                    🔍 Source Alternatives via Google
                   </button>
                   <button
                     onClick={() => {
                       const destinationCity = "Delhi";
-                      const url = `https://www.google.com/maps/search/logistics+and+warehousing+near+${encodeURIComponent(destinationCity)}`;
+                      const url = `https://www.google.com/maps/search/logistics+and+distribution+centers+near+${encodeURIComponent(destinationCity)}`;
                       window.open(url, '_blank');
                     }}
                     style={{ background: 'rgba(255, 165, 2, 0.1)', border: '1px solid #ffa502', color: '#ffa502', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}

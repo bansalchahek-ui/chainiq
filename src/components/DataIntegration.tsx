@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-import { Product, ProductPortfolio, Shipment } from '../constants/mockData';
-import { ShipmentWeather } from '../utils/weatherForecast';
+import { Product, ProductPortfolio } from '../constants/mockData';
+import { toast } from 'react-hot-toast';
 
 type Props = {
-  products: ProductPortfolio;
   setProducts: React.Dispatch<React.SetStateAction<ProductPortfolio>>;
-  shipments: Shipment[];
-  weatherData: Record<string, ShipmentWeather>;
-  evaluateShipments: (currentShipments: Shipment[], weatherMap: Record<string, ShipmentWeather>) => Shipment[];
   addAlert: (message: string, icon: string, impact?: number) => void;
 };
 
-export const DataIntegration: React.FC<Props> = ({ products, setProducts, shipments, weatherData, evaluateShipments, addAlert }) => {
+export const DataIntegration: React.FC<Props> = ({ setProducts, addAlert }) => {
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -58,22 +54,39 @@ export const DataIntegration: React.FC<Props> = ({ products, setProducts, shipme
 
   const handleBillCapture = () => {
     setLoading(true);
-    // Execution: 1. Show a brief loading state: "Parsing Bill..." (already handled by 'loading' state and button text)
+    const toastId = toast.loading("Processing Digital Invoice...");
+
     setTimeout(() => {
-      // 2. After 1.5 seconds, "detect" a new batch of Wireless Earbuds (Star).
-      // 3. Increment the unitsSold for Wireless Earbuds by +500.
       setProducts(prev => {
+        // Find "Wireless Earbuds" and increment unitsSold by +450, ensure it's a Star
         const next = { ...prev };
-        next.stars = next.stars.map(p => 
-          p.name === 'Wireless Earbuds' ? { ...p, unitsSold: p.unitsSold + 500 } : p
-        );
+        let found = false;
+        
+        // Remove from any quadrant first
+        for (const key in next) {
+          const k = key as keyof ProductPortfolio;
+          const idx = next[k].findIndex(p => p.name === 'Wireless Earbuds');
+          if (idx !== -1) {
+            const product = next[k].splice(idx, 1)[0];
+            product.unitsSold += 450;
+            product.quadrantId = 'Stars'; // Ensure it's marked as Star
+            next.stars.push(product);
+            found = true;
+            break;
+          }
+        }
+        
+        if (!found) {
+          // If not found, add as new star
+          next.stars.push({ name: 'Wireless Earbuds', profit: 18, unitsSold: 450, category: 'Electronics', quadrantId: 'Stars' });
+        }
+        
         return next;
       });
 
-      // 4. Trigger a global state update so the Product Matrix recalculates (handled by setProducts)
-      
-      // 5. Add a success alert to the feed
-      addAlert("✅ Bill Processed: +500 Wireless Earbuds recorded. Portfolio updated.", "📑", 0);
+      toast.dismiss(toastId);
+      toast.success("Bill Recorded: +450 Units added to Wireless Earbuds");
+      addAlert("✅ Bill Processed: +450 Wireless Earbuds recorded. Portfolio updated.", "📑", 0);
       
       setLoading(false);
     }, 1500);
