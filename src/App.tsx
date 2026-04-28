@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MOCK_SHIPMENTS, Shipment, PRODUCTS } from './constants/mockData';
+import { MOCK_SHIPMENTS, Shipment, PRODUCTS, ProductPortfolio, WAREHOUSE } from './constants/mockData';
 import { EnrouteTracker } from './components/EnrouteTracker';
 import { MapPanel } from './components/MapPanel';
 import { SupplierRanker } from './components/SupplierRanker';
@@ -9,8 +9,9 @@ import { EmailComposer, EmailComposerData } from './components/EmailComposer';
 import { fetchAllWeatherForShipment, ShipmentWeather } from './utils/weatherForecast';
 import { calculateRisk, getStatusFromScore, SignalScores } from './utils/riskEngine';
 import { runDecisionPipeline, DecisionResult } from './utils/decisionEngine';
+import DataIntegration from './components/DataIntegration.tsx';
 
-type ActiveView = 'map' | 'supplier' | 'product' | 'decision' | null;
+type ActiveView = 'map' | 'supplier' | 'product' | 'decision' | 'integration' | null;
 
 type Alert = {
   id: string;
@@ -27,6 +28,7 @@ export const App: React.FC = () => {
   const [selectedShipmentId, setSelectedShipmentId] = useState<string | null>(null);
   const [aiRecommendedSupplier, setAiRecommendedSupplier] = useState<string | null>(null);
   const [shipments, setShipments] = useState<Shipment[]>(MOCK_SHIPMENTS);
+  const [products, setProducts] = useState<ProductPortfolio>(PRODUCTS);
   const [weatherData, setWeatherData] = useState<Record<string, ShipmentWeather>>({});
   const [scoresData, setScoresData] = useState<Record<string, SignalScores>>({});
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -76,17 +78,16 @@ export const App: React.FC = () => {
 
   const evaluateShipments = (currentShipments: Shipment[], weatherMap: Record<string, ShipmentWeather>) => {
     const sMap: Record<string, SignalScores> = {};
-    const newShipments = [...currentShipments];
-
-    newShipments.forEach(s => {
-      if (!weatherMap[s.id]) return;
+    const newShipments = currentShipments.map(s => {
+      if (!weatherMap[s.id]) return s;
       const w = weatherMap[s.id];
       const scores = calculateRisk(s, w.dest.condition, w.route.condition, w.origin.condition);
       sMap[s.id] = scores;
 
       if (s.status !== 'REROUTED') {
-         s.status = getStatusFromScore(scores.total);
+         return { ...s, status: getStatusFromScore(scores.total) };
       }
+      return s;
     });
 
     setScoresData(sMap);
@@ -118,24 +119,24 @@ export const App: React.FC = () => {
 
   const handleTriggerDisruption = () => {
     setShipments(prev => {
-      const next = [...prev];
-      const s = next.find(x => x.id === 'S002');
+      const s = prev.find(x => x.id === 'S002');
       if (s) {
-        s.delayHours = 5.5;
+        const next = prev.map(x => x.id === 'S002' ? { ...x, delayHours: 5.5 } : x);
         if (weatherData[s.id]) {
            const newW = { ...weatherData };
            newW[s.id] = { ...newW[s.id], dest: { ...newW[s.id].dest, condition: 'storm' } };
            setWeatherData(newW);
            const finalShips = evaluateShipments(next, newW);
-           const decisions = runDecisionPipeline(s, { capacityPct: 48, loadingDocks: [], deepStorage: [] }, finalShips);
+           const decisions = runDecisionPipeline(finalShips.find(x => x.id === 'S002')!, WAREHOUSE, finalShips);
            addAlert("S002 critical delay detected. Triggering cascade.", "🔴");
            decisions.forEach(d => {
              addAlert(`Cascade: ${d.action.toUpperCase()} - ${d.usp.replace(/_/g, ' ').toUpperCase()}`, d.approved ? "🟢" : "🟠", d.netSaving || d.financialImpact, d);
            });
            return finalShips;
         }
+        return next;
       }
-      return next;
+      return prev;
     });
   };
 
@@ -182,7 +183,7 @@ export const App: React.FC = () => {
     }).length;
 
     return (
-      <div className="overview-grid">
+      <div className="overview-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
         
         {/* Card 1: Map */}
         <div className="overview-card" style={{ background: '#1a1d26', border: '1px solid #2a2d3a', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
@@ -226,8 +227,8 @@ export const App: React.FC = () => {
             <span style={{ fontSize: '15px', fontWeight: 500 }}>Product Portfolio</span>
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <div style={{ fontSize: '32px', fontWeight: 700, color: '#00d4aa', textAlign: 'center', lineHeight: 1.2 }}>{PRODUCTS.stars.length} Stars<br/>{PRODUCTS.hiddenGems.length} Hidden Gems</div>
-            <div style={{ fontSize: '13px', color: '#a0a3b1', marginTop: '8px' }}>20 SKUs classified · 2 quadrants at supply risk</div>
+            <div style={{ fontSize: '32px', fontWeight: 700, color: '#00d4aa', textAlign: 'center', lineHeight: 1.2 }}>{products.stars.length} Stars<br/>{products.hiddenGems.length} Hidden Gems</div>
+            <div style={{ fontSize: '13px', color: '#a0a3b1', marginTop: '8px' }}>{(products.stars.length + products.hiddenGems.length + products.volumeDrivers.length + products.deadWeight.length)} SKUs classified · 2 quadrants at supply risk</div>
             <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
               <span style={{ color: '#00d4aa', fontSize: '12px' }}>● Stars</span>
               <span style={{ color: '#7c5cbf', fontSize: '12px' }}>● Hidden</span>
@@ -252,6 +253,24 @@ export const App: React.FC = () => {
           <button onClick={() => setActiveView('decision')} style={{ position: 'absolute', bottom: '24px', right: '24px', background: 'transparent', border: 'none', color: '#00d4aa', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Expand →</button>
         </div>
 
+        {/* Card 5: Data Integration */}
+        <div className="overview-card" style={{ background: '#1a1d26', border: '1px solid #2a2d3a', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '20px' }}>🔌</span>
+            <span style={{ fontSize: '15px', fontWeight: 500 }}>Data Integration</span>
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ fontSize: '32px', fontWeight: 700, color: '#00d4aa', textAlign: 'center' }}>Active</div>
+            <div style={{ fontSize: '13px', color: '#a0a3b1', marginTop: '8px' }}>Manual Entry & Bill Capture ready</div>
+            <div style={{ fontSize: '12px', color: '#fff', marginTop: '16px', display: 'flex', gap: '8px' }}>
+              <span style={{ background: 'rgba(0, 212, 170, 0.1)', color: '#00d4aa', padding: '2px 8px', borderRadius: '4px' }}>JSON</span>
+              <span style={{ background: 'rgba(0, 212, 170, 0.1)', color: '#00d4aa', padding: '2px 8px', borderRadius: '4px' }}>CSV</span>
+              <span style={{ background: 'rgba(0, 212, 170, 0.1)', color: '#00d4aa', padding: '2px 8px', borderRadius: '4px' }}>API</span>
+            </div>
+          </div>
+          <button onClick={() => setActiveView('integration')} style={{ position: 'absolute', bottom: '24px', right: '24px', background: 'transparent', border: 'none', color: '#00d4aa', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Connect →</button>
+        </div>
+
       </div>
     );
   };
@@ -268,10 +287,13 @@ export const App: React.FC = () => {
       content = <SupplierRanker aiRecommendedSupplier={aiRecommendedSupplier} setAiRecommendedSupplier={setAiRecommendedSupplier} onOpenEmailComposer={handleOpenEmailComposer} shipments={shipments} scoresData={scoresData} />;
     } else if (activeView === 'product') {
       title = "Product Portfolio";
-      content = <ProductMatrix activeShipments={shipments} scoresData={scoresData} onReroute={handleReroute} addAlert={addAlert} setAiRecommendedSupplier={setAiRecommendedSupplier} />;
+      content = <ProductMatrix products={products} activeShipments={shipments} scoresData={scoresData} onReroute={handleReroute} addAlert={addAlert} setAiRecommendedSupplier={setAiRecommendedSupplier} />;
     } else if (activeView === 'decision') {
       title = "Decision Engine";
       content = <DecisionEngineExpanded alerts={alerts} shipments={shipments} addAlert={addAlert} onSlottingExecuted={setIsSlottingExecuted} />;
+    } else if (activeView === 'integration') {
+      title = "Data Integration Center";
+      content = <DataIntegration products={products} setProducts={setProducts} shipments={shipments} weatherData={weatherData} evaluateShipments={evaluateShipments} addAlert={addAlert} />;
     }
 
     return (

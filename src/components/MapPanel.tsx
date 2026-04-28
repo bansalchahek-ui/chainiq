@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { Shipment, SUPPLIERS, GEOPOLITICAL_DATA } from '../constants/mockData';
+import { Shipment, SUPPLIERS, GEOPOLITICAL_DATA, WAREHOUSE } from '../constants/mockData';
 import { runDecisionPipeline } from '../utils/decisionEngine';
 import { DecisionCard } from './DecisionCard';
 import { RiskBreakdown } from './RiskBreakdown';
@@ -77,7 +77,7 @@ export const MapPanel: React.FC<Props> = ({ shipments, weatherData, scoresData, 
     setExplainText("");
     
 
-    const mockDecisions = runDecisionPipeline(selectedShipment, { capacityPct: 48, loadingDocks: [], deepStorage: [] }, shipments);
+    const mockDecisions = runDecisionPipeline(selectedShipment, WAREHOUSE, shipments);
     const supplier = SUPPLIERS[selectedShipment.supplierKey];
 
     const etaDays = Math.max(1, Math.ceil(selectedShipment.etaHours / 24));
@@ -264,9 +264,9 @@ export const MapPanel: React.FC<Props> = ({ shipments, weatherData, scoresData, 
               {/* Decisions block */}
               <div>
                 <h3 style={{ fontSize: '11px', color: '#a0a3b1', margin: '0 0 12px 0', textTransform: 'uppercase' }}>System Decisions</h3>
-                {runDecisionPipeline(selectedShipment, { capacityPct: 48, loadingDocks: [], deepStorage: [] }, shipments).length > 0 ? (
+                {runDecisionPipeline(selectedShipment, WAREHOUSE, shipments).length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {runDecisionPipeline(selectedShipment, { capacityPct: 48, loadingDocks: [], deepStorage: [] }, shipments).map((d, i) => (
+                    {runDecisionPipeline(selectedShipment, WAREHOUSE, shipments).map((d, i) => (
                       <DecisionCard key={i} decision={d} />
                     ))}
                   </div>

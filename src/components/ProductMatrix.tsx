@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
-import { PRODUCTS, Shipment, SUPPLIERS } from '../constants/mockData';
+import { Shipment, SUPPLIERS, ProductPortfolio, Product } from '../constants/mockData';
 import { productStrategy, productSpecificStrategy } from '../utils/geminiClient';
 import { SignalScores } from '../utils/riskEngine';
-
 type Props = {
   activeShipments: Shipment[];
   scoresData: Record<string, SignalScores>;
-  onReroute: (id: string, msg: string, save: number) => void;
-  addAlert: (msg: string, icon: string, impact: number) => void;
+  onReroute: (id: string, customMsg?: string, saving?: number) => void;
+  addAlert: (message: string, icon: string, impact?: number, decision?: any) => void;
   setAiRecommendedSupplier: (s: string | null) => void;
+  products: ProductPortfolio;
 };
 
-export const ProductMatrix: React.FC<Props> = ({ activeShipments, scoresData, onReroute, addAlert, setAiRecommendedSupplier }) => {
+export const ProductMatrix: React.FC<Props> = ({ products, activeShipments, scoresData, onReroute, addAlert, setAiRecommendedSupplier }) => {
   const [loading, setLoading] = useState(false);
-  const [strategies, setStrategies] = useState<any>(null);
+  const [strategies, setStrategies] = useState<Record<string, string> | null>(null);
 
-  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<(Product & { quadrantId: string }) | null>(null);
   const [productLoading, setProductLoading] = useState(false);
   const [productStrategyRes, setProductStrategyRes] = useState<any | null>(null);
 
   const handleGetStrategy = async () => {
     setLoading(true);
-    const result = await productStrategy(PRODUCTS);
+    const result = await productStrategy(products);
     setStrategies(result);
     setLoading(false);
   };
@@ -126,9 +126,9 @@ export const ProductMatrix: React.FC<Props> = ({ activeShipments, scoresData, on
     addAlert(`Route changed for ${selectedProduct.name} shipment — saving ${productStrategyRes.routeRecommendation.financialImpact}`, '🛣', 0);
   };
 
-  const renderQuadrant = (title: string, emoji: string, id: keyof typeof PRODUCTS, bgColor: string, borderColor: string) => {
-    const products = PRODUCTS[id];
-    const isDisrupted = products.some(p => hasDisruption(p.category));
+  const renderQuadrant = (title: string, emoji: string, id: keyof ProductPortfolio, bgColor: string, borderColor: string) => {
+    const productsInQuad = products[id];
+    const isDisrupted = productsInQuad.some((p: Product) => hasDisruption(p.category));
 
     return (
       <div style={{ background: bgColor, border: `1px solid ${borderColor}`, borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
@@ -141,13 +141,13 @@ export const ProductMatrix: React.FC<Props> = ({ activeShipments, scoresData, on
               </span>
             )}
             <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.1)', color: '#a0a3b1', padding: '4px 8px', borderRadius: '12px' }}>
-              {products.length} SKUs
+              {productsInQuad.length} SKUs
             </span>
           </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-          {products.map(p => {
+          {productsInQuad.map((p: Product) => {
              const prodDisrupted = hasDisruption(p.category);
              return (
               <div 
@@ -306,6 +306,33 @@ export const ProductMatrix: React.FC<Props> = ({ activeShipments, scoresData, on
                   </div>
                 );
               })()}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '11px', color: '#a0a3b1', textTransform: 'uppercase' }}>🌐 Live Market Bridge</h3>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => {
+                    const targetRegion = "Southeast Asia";
+                    const url = `https://www.google.com/search?q=reliable+suppliers+of+${encodeURIComponent(selectedProduct.name)}+in+${encodeURIComponent(targetRegion)}+with+low+tariffs`;
+                    window.open(url, '_blank');
+                  }}
+                  style={{ flex: 1, background: '#0f1117', border: '1px solid #378add', color: '#378add', padding: '10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  🔍 Search Market
+                </button>
+                <button
+                  onClick={() => {
+                    const s = getShipmentForCategory(selectedProduct.category);
+                    const city = s ? s.destination.split(',')[0] : "Delhi";
+                    const url = `https://www.google.com/maps/search/logistics+and+warehousing+near+${encodeURIComponent(city)}`;
+                    window.open(url, '_blank');
+                  }}
+                  style={{ flex: 1, background: '#0f1117', border: '1px solid #ffa502', color: '#ffa502', padding: '10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  📍 Find Nearby
+                </button>
+              </div>
             </div>
 
             <button

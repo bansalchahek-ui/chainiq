@@ -7,6 +7,34 @@ import { EmailComposerData } from './EmailComposer';
 import { Shipment } from '../constants/mockData';
 import { SignalScores } from '../utils/riskEngine';
 
+export interface Supplier {
+  name: string;
+  country: string;
+  flag: string;
+  tariffPct: number;
+  etaDays: number;
+  qualityScore: number;
+  costPerUnit: number;
+  reliability: number;
+  financialRating: string;
+  politicsStability: string;
+  news: string;
+  products: string[];
+}
+
+interface RankedSupplier {
+  rank: number;
+  name: string;
+  score: number;
+  one_line_reason: string;
+}
+
+interface AltSupplier {
+  recommended: string;
+  reason: string;
+  tradeoff: string;
+}
+
 type Props = {
   aiRecommendedSupplier?: string | null;
   setAiRecommendedSupplier?: (s: string | null) => void;
@@ -18,16 +46,16 @@ type Props = {
 export const SupplierRanker: React.FC<Props> = ({ aiRecommendedSupplier, setAiRecommendedSupplier, onOpenEmailComposer, shipments = [], scoresData = {} }) => {
   const [activeTab, setActiveTab] = useState('💰 Cost');
   const [loading, setLoading] = useState(false);
-  const [rankedData, setRankedData] = useState<any[]>([]);
+  const [rankedData, setRankedData] = useState<RankedSupplier[]>([]);
 
-  const suppliersList = Object.values(SUPPLIERS);
+  const suppliersList = Object.values(SUPPLIERS) as Supplier[];
 
-  const [altSuppliers, setAltSuppliers] = useState<Record<string, any>>({});
+  const [altSuppliers, setAltSuppliers] = useState<Record<string, AltSupplier>>({});
   const [loadingAlt, setLoadingAlt] = useState<string | null>(null);
 
-  const getSupplierAlerts = (s: any) => {
+  const getSupplierAlerts = (s: Supplier) => {
     const alerts = [];
-    if (s.financialRating.includes('B') && s.financialRating !== 'BBB') alerts.push(`Financial rating ${s.financialRating} — elevated default risk`);
+    if (s.financialRating?.includes('B') && s.financialRating !== 'BBB') alerts.push(`Financial rating ${s.financialRating} — elevated default risk`);
     if (s.politicsStability === 'unstable') alerts.push(`Political instability in ${s.country}`);
     if (GEOPOLITICAL_DATA[s.country]?.riskLevel > 60) alerts.push(`Geopolitical risk level ${GEOPOLITICAL_DATA[s.country].riskLevel}/100`);
     if (s.reliability < 75) alerts.push(`Low reliability score (${s.reliability}/100)`);
@@ -36,7 +64,7 @@ export const SupplierRanker: React.FC<Props> = ({ aiRecommendedSupplier, setAiRe
 
   const flaggedSuppliers = suppliersList.map(s => ({ ...s, alerts: getSupplierAlerts(s) })).filter(s => s.alerts.length > 0);
 
-  const handleFindAlt = async (s: any) => {
+  const handleFindAlt = async (s: Supplier & { alerts: string[] }) => {
     setLoadingAlt(s.name);
     const others = suppliersList.filter(x => x.name !== s.name);
     const res = await findAlternativeSupplier(s.name, s.country, s.alerts.join(', '), s.products?.join(', ') || '', s.costPerUnit, s.etaDays, others);
@@ -153,10 +181,34 @@ export const SupplierRanker: React.FC<Props> = ({ aiRecommendedSupplier, setAiRe
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '11px', color: '#a0a3b1', textTransform: 'uppercase' }}>Live Risk</span>
-                    <span style={{ background: `${riskColor}22`, color: riskColor, padding: '4px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 700 }}>
-                      {riskPillScore}
-                    </span>
+                    <div style={{ padding: '4px 10px', borderRadius: '12px', background: `${riskColor}20`, border: `1px solid ${riskColor}`, color: riskColor, fontSize: '12px', fontWeight: 600 }}>
+                      {riskPillScore}/100
+                    </div>
                   </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', paddingLeft: '16px', marginBottom: '4px' }}>
+                  <button
+                    onClick={() => {
+                      const productName = supplierData.products?.[0] || "general supplies";
+                      const targetRegion = supplierData.country === 'China' ? "Vietnam" : "India";
+                      const url = `https://www.google.com/search?q=reliable+suppliers+of+${encodeURIComponent(productName)}+in+${encodeURIComponent(targetRegion)}+with+low+tariffs`;
+                      window.open(url, '_blank');
+                    }}
+                    style={{ background: 'rgba(55, 138, 221, 0.1)', border: '1px solid #378add', color: '#378add', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    🔍 Search Market for Alternatives
+                  </button>
+                  <button
+                    onClick={() => {
+                      const destinationCity = "Delhi";
+                      const url = `https://www.google.com/maps/search/logistics+and+warehousing+near+${encodeURIComponent(destinationCity)}`;
+                      window.open(url, '_blank');
+                    }}
+                    style={{ background: 'rgba(255, 165, 2, 0.1)', border: '1px solid #ffa502', color: '#ffa502', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    📍 Find Nearby Distributors
+                  </button>
                 </div>
 
                 <div style={{ width: '100%', height: '6px', background: '#0f1117', borderRadius: '3px', overflow: 'hidden' }}>
@@ -205,7 +257,7 @@ export const SupplierRanker: React.FC<Props> = ({ aiRecommendedSupplier, setAiRe
                       const emailData: EmailComposerData = {
                         supplier: supplierData,
                         shipment: shipment,
-                        alternateSupplier: rankedData.find(r => r.name !== item.name) ? suppliersList.find(s => s.name === rankedData.find(r => r.name !== item.name).name) : null,
+                        alternateSupplier: rankedData.find(r => r.name !== item.name) ? suppliersList.find(s => s.name === (rankedData.find(r => r.name !== item.name)?.name || '')) || null : null,
                         alternateRoute: "Reroute via Alternate Hub",
                         financialImpact: shipment ? `$${(shipment.delayHours * shipment.costPerHourDelay).toLocaleString()}` : "N/A",
                         etaImpact: "-2h",

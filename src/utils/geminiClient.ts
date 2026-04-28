@@ -73,6 +73,7 @@ export const explainRisk = async (
   Rules: No jargon. No bullet points. No headers.
   Use the shipment ID, product name, and dollar amounts.
   Sound confident — the system has this under control.
+  Mention the possibility of using "Live Search" or Google Maps to find nearby alternatives or distributors if the current supplier is flagged as high risk.
   Return only the 5 sentences, nothing else.
   `;
 
@@ -142,6 +143,7 @@ export const productStrategy = async (products: any): Promise<any> => {
     "volume_drivers": "one actionable sentence",
     "dead_weight": "one actionable sentence"
   }
+  Note: You can recommend using the "Live Market Bridge" (Google Search/Maps) to find better alternatives for any quadrant.
   `;
 
   const raw = await callGemini(prompt);
@@ -255,6 +257,7 @@ export const productSpecificStrategy = async (
   - If current supplier is reliable and low risk, recommend keeping them
   - If risk score > 55, strongly recommend reroute
   - If supplier has unstable politics or BB rating, recommend switching with specific alternative
+  - Explicitly mention that the manager can use the "🔍 Search Market" and "📍 Find Nearby" buttons integrated in the drawer to find real-time alternatives or nearby distributors (e.g., "Recommend searching for local Indian suppliers via Google Maps to reduce current 18% China tariff").
   - Return ONLY valid JSON, no markdown, no backticks
   `;
 

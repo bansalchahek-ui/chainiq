@@ -1,4 +1,11 @@
 export type Coords = { lat: number; lon: number };
+export type Product = { name: string; profit: number; unitsSold: number; category: string; quadrantId?: string };
+export type ProductPortfolio = {
+  stars: Product[];
+  hiddenGems: Product[];
+  volumeDrivers: Product[];
+  deadWeight: Product[];
+};
 
 export type Shipment = {
   id: string;

@@ -4,19 +4,22 @@ import { DecisionCard } from './DecisionCard';
 
 import { Shipment } from '../constants/mockData';
 
+import { DecisionResult } from '../utils/decisionEngine';
+
 type Alert = {
   id: string;
   time: string;
   message: string;
   impact?: number;
   icon: string;
-  decision?: any; 
+  decision?: DecisionResult;
+  timestamp: number;
 };
 
 type Props = {
   alerts: Alert[];
   shipments: Shipment[];
-  addAlert: (msg: string, icon: string, impact?: number) => void;
+  addAlert: (message: string, icon: string, impact?: number, decision?: DecisionResult) => void;
   onSlottingExecuted: (val: boolean) => void;
 };
 
