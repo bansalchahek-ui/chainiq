@@ -35,7 +35,9 @@ export const ProductMatrix: React.FC<Props> = ({ products, activeShipments, scor
   };
 
   const getSupplierForProduct = (productName: string) => {
-    return Object.values(SUPPLIERS).find(s => s.products?.includes(productName));
+    return Object.values(SUPPLIERS).find(s => 
+      s.products?.some((p: string) => p.toLowerCase() === productName.toLowerCase())
+    );
   };
 
   const handleProductClick = (product: any, quadrantId: string) => {

@@ -58,29 +58,25 @@ export const DataIntegration: React.FC<Props> = ({ products, setProducts, shipme
 
   const handleBillCapture = () => {
     setLoading(true);
+    // Execution: 1. Show a brief loading state: "Parsing Bill..." (already handled by 'loading' state and button text)
     setTimeout(() => {
-      // Simulate parsing a bill
-      const updatedProducts = { ...products };
-      
-      // Increment unitsSold for some products
-      updatedProducts.stars = updatedProducts.stars.map(p => p.name === 'Wireless Earbuds' ? { ...p, unitsSold: p.unitsSold + 250 } : p);
-      updatedProducts.volumeDrivers = updatedProducts.volumeDrivers.map(p => p.name === 'Basic T-Shirts' ? { ...p, unitsSold: p.unitsSold + 500 } : p);
-
-      setProducts(updatedProducts);
-
-      // Trigger risk engine by updating shipments
-      const nextShipments = shipments.map(s => {
-        if (s.product === 'Wireless Earbuds' || s.product === 'Basic T-Shirts') {
-          return { ...s, delayHours: s.delayHours + 0.5 }; // Minor delay simulated
-        }
-        return s;
+      // 2. After 1.5 seconds, "detect" a new batch of Wireless Earbuds (Star).
+      // 3. Increment the unitsSold for Wireless Earbuds by +500.
+      setProducts(prev => {
+        const next = { ...prev };
+        next.stars = next.stars.map(p => 
+          p.name === 'Wireless Earbuds' ? { ...p, unitsSold: p.unitsSold + 500 } : p
+        );
+        return next;
       });
+
+      // 4. Trigger a global state update so the Product Matrix recalculates (handled by setProducts)
       
-      evaluateShipments(nextShipments, weatherData);
+      // 5. Add a success alert to the feed
+      addAlert("✅ Bill Processed: +500 Wireless Earbuds recorded. Portfolio updated.", "📑", 0);
       
-      addAlert("Digital Bill Captured: Inventory levels updated and supply chain risk re-evaluated.", "📑", 450);
       setLoading(false);
-    }, 2000);
+    }, 1500);
   };
 
   return (

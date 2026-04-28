@@ -34,6 +34,10 @@ export const App: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [timeStr, setTimeStr] = useState("");
 
+  useEffect(() => {
+    console.log("Logic Bridge Active: Supplier and Bill Capture Wired.");
+  }, []);
+
   const [emailComposerOpen, setEmailComposerOpen] = useState(false);
   const [emailComposerData, setEmailComposerData] = useState<EmailComposerData | null>(null);
   const [emailComposerType, setEmailComposerType] = useState<'cancel' | 'reroute' | 'newOrder'>('cancel');
